@@ -4,7 +4,7 @@
     <el-header>信息处资产管理系统</el-header>
     <el-container>
       <el-aside width="200px">
-        <nav-menu></nav-menu>
+        <nav-menu :tabIndex="tabIndex"></nav-menu>
       </el-aside>
       <el-container>
         <el-main class="home-main-container">
@@ -12,7 +12,7 @@
             <el-page-header slot="header" class="main-card" @back="goBack">
               <div class="main-card" slot="content">{{cardHeader}}</div>
             </el-page-header>
-            <router-view @title="title"/>
+            <router-view @title="title" @tabClick="tabClick"/>
           </el-card>
           <template>
             <el-backtop target=".home-main-container"></el-backtop>
@@ -33,7 +33,8 @@
     components: {NavMenu},
     data() {
       return {
-        cardHeader: "栏目标题"
+        cardHeader: "栏目标题",
+        tabIndex: ""
       }
     },
     methods: {
@@ -42,6 +43,9 @@
       },
       goBack() {
         this.$router.back()
+      },
+      tabClick(str) {
+        this.tabIndex = str
       }
     }
   }
@@ -105,6 +109,12 @@
 <style>
   .el-card__header {
     background-color: #750f0f;
+    padding: 10px 20px;
+  }
+
+  .el-dialog__header {
+    background-color: #750f0f;
+    color: #ffffff;
     padding: 10px 20px;
   }
 </style>

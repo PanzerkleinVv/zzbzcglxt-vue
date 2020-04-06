@@ -1,8 +1,14 @@
 <template>
   <div>
     <el-form :inline="true" :model="searchFrom" ref="searchFrom">
-      <el-form-item label="查找类型">
-        <el-input v-model="searchFrom.typeName" placeholder="查找设备类型" clearable @change="onSearch"></el-input>
+      <el-form-item label="查找型号">
+        <el-input v-model="searchFrom.modelName" placeholder="查找设备型号" clearable @change="onSearch"></el-input>
+      </el-form-item>
+      <el-form-item label="所属品牌">
+        <el-cascader
+          v-model="searchFrom.modelBrand" :props="{expandTrigger: 'hover', emitPath: false}" filterable
+          :options="options" @change="onSearch" placeholder="全部品牌" :loading="typeListLoading" loading-text="载入中……"
+          clearable></el-cascader>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="onSearch">查询</el-button>
@@ -45,54 +51,18 @@
       :total="searchFrom.totalSize">
     </el-pagination>
     <el-dialog :visible.sync="infoDialog" destroy-on-close append-to-body>
-      <div slot="title" style="color: #ffffff; font-size: larger">设备类型信息</div>
+      <div slot="title" style="color: #ffffff; font-size: larger">设备型号信息</div>
       <el-form inline :model="infoData" ref="infoData" :rules="infoRules" label-position="right" label-width="80px">
         <el-col :span="24">
-          <el-form-item label="设备类型" prop="typeName">
-            <el-input v-model="infoData.typeName" autocomplete="off" placeholder="请输入设备类型"></el-input>
+          <el-form-item label="设备型号" prop="modelName">
+            <el-input v-model="infoData.modelName" autocomplete="off" placeholder="请输入设备型号"></el-input>
           </el-form-item>
         </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要品牌">
-            &emsp;
-            <el-switch v-model="infoData.typeBrand" active-text="是" inactive-text="否" @change="typeBrandChange">
-            </el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要型号">
-            &emsp;
-            <el-switch v-model="infoData.typeModel" active-text="是" inactive-text="否" :disabled="typeModelDisabled"
-                       ref="typeModel">
-            </el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要密级">
-            &emsp;
-            <el-switch v-model="infoData.typeSecrecy" active-text="是" inactive-text="否">
-            </el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要IP">
-            &emsp;
-            <el-switch v-model="infoData.typeIp" active-text="是" inactive-text="否">
-            </el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要sn码">
-            &emsp;
-            <el-switch v-model="infoData.typeSn" active-text="是" inactive-text="否">
-            </el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要mac">
-            &emsp;
-            <el-switch v-model="infoData.typeMac" active-text="是" inactive-text="否">
-            </el-switch>
+        <el-col :span="24">
+          <el-form-item label="所属品牌" prop="modelBrand" ref="modelBrand">
+            <el-cascader
+              v-model="infoData.modelBrand" :props="{expandTrigger: 'hover', emitPath: false}" filterable
+              :options="options" placeholder="请选择" :loading="typeListLoading" loading-text="载入中……"></el-cascader>
           </el-form-item>
         </el-col>
       </el-form>
@@ -108,21 +78,32 @@
 
 <script>
   export default {
-    name: "Type",
+    name: "Model",
     data() {
       return {
         searchFrom: {
-          typeName: '',
+          modelName: '',
+          modelBrand: '',
           pageSize: 10,
           totalSize: 0,
           pageNum: 1
         },
         tableHeader: [{
-          prop: "typeName",
-          label: "设备类型",
+          prop: "modelName",
+          label: "设备型号",
           showOverflowTooltip: true,
           sortable: true,
           fixed: true
+        }, {
+          prop: "typeName",
+          label: "所属类型",
+          showOverflowTooltip: true,
+          sortable: true
+        }, {
+          prop: "brandName",
+          label: "所属品牌",
+          showOverflowTooltip: true,
+          sortable: true
         }, {
           prop: "equipmentCount",
           label: "设备数量",
@@ -131,24 +112,29 @@
         }],
         infoData: {},
         infoRules: {
-          typeName: [
-            {required: true, message: '请输入设备类型', trigger: 'blur'}
+          modelName: [
+            {required: true, message: '请输入设备型号', trigger: 'blur'}
+          ],
+          modelBrand: [
+            {required: true, message: '请选择', trigger: 'change'}
           ]
         },
         tableData: [],
+        options: [],
         loading: true,
         infoDialog: false,
-        typeModelDisabled: true,
-        formLoading: false
+        formLoading: false,
+        typeListLoading: true
       }
     },
     methods: {
       onSearch() {
         this.loading = true
         this.$axios.get(
-          "/equipment/type/search", {
+          "/equipment/model/search", {
             params: {
-              'typeName': this.searchFrom.typeName,
+              'modelName': this.searchFrom.modelName,
+              'modelBrand': this.searchFrom.modelBrand,
               'pageNum': this.searchFrom.pageNum,
               'pageSize': this.searchFrom.pageSize
             }
@@ -169,28 +155,15 @@
         })
       },
       onCreate() {
-        this.typeModelDisabled = true
         this.infoDialog = true
         this.$nextTick(() => {
           this.infoData = {
-            typeId: "",
-            typeName: "",
-            typeBrand: false,
-            typeModel: false,
-            typeSecrecy: false,
-            typeIp: false,
-            typeSn: false,
-            typeMac: false
+            modelId: "",
+            modelName: "",
+            modelBrand: ""
           }
+          this.$refs["modelBrand"].resetField()
         })
-      },
-      typeBrandChange(val) {
-        if (val) {
-          this.typeModelDisabled = false
-        } else {
-          this.infoData.typeModel = false
-          this.typeModelDisabled = true
-        }
       },
       handleSizeChange(val) {
         this.searchFrom.pageSize = val
@@ -203,7 +176,6 @@
       handleEdit(index, row) {
         this.infoDialog = true
         this.$nextTick(() => {
-          this.typeModelDisabled = !row.typeBrand
           this.infoData = row
         })
       },
@@ -213,7 +185,7 @@
           if (valid) {
             let formData = this.$querystring.stringify(this.infoData)
             this.$axios.post(
-              "/equipment/type/edit",
+              "/equipment/model/edit",
               formData,
               {
                 headers: {"content-type": "application/x-www-form-urlencoded;charset=utf-8"}
@@ -243,8 +215,36 @@
           }
         })
       },
+      getTypeList() {
+        this.$axios.get("/equipment/type/list").then(resp => {
+          if (resp && resp.status === 200) {
+            this.options = []
+            for (let type of resp.data) {
+              if (type.typeModel && type.brands.length > 0) {
+                let typeOption = {
+                  value: type.typeId,
+                  label: type.typeName,
+                  children: []
+                }
+                for (let brand of type.brands) {
+                  let brandOption = {
+                    value: brand.brandId,
+                    label: brand.brandName
+                  }
+                  typeOption.children.push(brandOption)
+                }
+                this.options.push(typeOption)
+              }
+            }
+            this.typeListLoading = false
+          } else {
+
+          }
+        })
+      },
       init() {
         this.$emit("tab", this.$route.path)
+        this.getTypeList()
         this.onSearch()
       }
     },

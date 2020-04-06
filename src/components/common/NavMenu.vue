@@ -36,10 +36,10 @@
 </template>
 
 <script>
-  import {isUndefined} from "element-ui";
 
   export default {
     name: 'NavMenu',
+    props: ["tabIndex"],
     data() {
       return {
         navList: [
@@ -83,7 +83,6 @@
         if (index === undefined) {
           index = this.$route.path
         }
-        console.log()
         if (index.indexOf("statistics") > -1) {
           this.activeIndex = "/statistics"
         } else {
@@ -93,6 +92,13 @@
     },
     mounted() {
       this.init()
+    },
+    watch: {
+      tabIndex: function(val) {
+        if (val.length > 0) {
+          this.init(val)
+        }
+      }
     }
   }
 </script>

@@ -16,7 +16,7 @@
         :key="i">
       </el-table-column>
     </el-table>
-    <el-button type="primary" @click="exportExcel()" v-loading="exportLoading">导出</el-button>
+    <el-button type="primary" @click="exportExcel()" :loading="exportLoading">{{ exportLoading ? '导出中 ...' : '导 出' }}</el-button>
   </div>
 </template>
 

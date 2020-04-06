@@ -1,8 +1,8 @@
 <template>
   <div>
     <el-form :inline="true" :model="searchFrom" ref="searchFrom">
-      <el-form-item label="查找类型">
-        <el-input v-model="searchFrom.typeName" placeholder="查找设备类型" clearable @change="onSearch"></el-input>
+      <el-form-item label="查找密级">
+        <el-input v-model="searchFrom.secrecyName" placeholder="查找设备密级" clearable @change="onSearch"></el-input>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="onSearch">查询</el-button>
@@ -45,56 +45,11 @@
       :total="searchFrom.totalSize">
     </el-pagination>
     <el-dialog :visible.sync="infoDialog" destroy-on-close append-to-body>
-      <div slot="title" style="color: #ffffff; font-size: larger">设备类型信息</div>
+      <div slot="title" style="color: #ffffff; font-size: larger">设备密级信息</div>
       <el-form inline :model="infoData" ref="infoData" :rules="infoRules" label-position="right" label-width="80px">
-        <el-col :span="24">
-          <el-form-item label="设备类型" prop="typeName">
-            <el-input v-model="infoData.typeName" autocomplete="off" placeholder="请输入设备类型"></el-input>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要品牌">
-            &emsp;
-            <el-switch v-model="infoData.typeBrand" active-text="是" inactive-text="否" @change="typeBrandChange">
-            </el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要型号">
-            &emsp;
-            <el-switch v-model="infoData.typeModel" active-text="是" inactive-text="否" :disabled="typeModelDisabled"
-                       ref="typeModel">
-            </el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要密级">
-            &emsp;
-            <el-switch v-model="infoData.typeSecrecy" active-text="是" inactive-text="否">
-            </el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要IP">
-            &emsp;
-            <el-switch v-model="infoData.typeIp" active-text="是" inactive-text="否">
-            </el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要sn码">
-            &emsp;
-            <el-switch v-model="infoData.typeSn" active-text="是" inactive-text="否">
-            </el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要mac">
-            &emsp;
-            <el-switch v-model="infoData.typeMac" active-text="是" inactive-text="否">
-            </el-switch>
-          </el-form-item>
-        </el-col>
+        <el-form-item label="设备类型" prop="secrecyName">
+          <el-input v-model="infoData.secrecyName" autocomplete="off" placeholder="请输入设备密级"></el-input>
+        </el-form-item>
       </el-form>
       <div slot="footer" align="center">
         <el-button @click="infoDialog = false">取 消</el-button>
@@ -108,37 +63,31 @@
 
 <script>
   export default {
-    name: "Type",
+    name: "Secrecy",
     data() {
       return {
         searchFrom: {
-          typeName: '',
+          secrecyName: '',
           pageSize: 10,
           totalSize: 0,
           pageNum: 1
         },
         tableHeader: [{
-          prop: "typeName",
-          label: "设备类型",
+          prop: "secrecyName",
+          label: "设备密级",
           showOverflowTooltip: true,
           sortable: true,
           fixed: true
-        }, {
-          prop: "equipmentCount",
-          label: "设备数量",
-          showOverflowTooltip: true,
-          sortable: true
         }],
         infoData: {},
         infoRules: {
-          typeName: [
-            {required: true, message: '请输入设备类型', trigger: 'blur'}
+          secrecyName: [
+            {required: true, message: '请输入设备密级', trigger: 'blur'}
           ]
         },
         tableData: [],
         loading: true,
         infoDialog: false,
-        typeModelDisabled: true,
         formLoading: false
       }
     },
@@ -146,9 +95,9 @@
       onSearch() {
         this.loading = true
         this.$axios.get(
-          "/equipment/type/search", {
+          "/equipment/secrecy/search", {
             params: {
-              'typeName': this.searchFrom.typeName,
+              'secrecyName': this.searchFrom.secrecyName,
               'pageNum': this.searchFrom.pageNum,
               'pageSize': this.searchFrom.pageSize
             }
@@ -157,11 +106,7 @@
             this.searchFrom.pageNum = resp.data.pageNum
             this.searchFrom.pageSize = resp.data.pageSize
             this.searchFrom.totalSize = resp.data.totalSize
-            this.tableData = []
-            for (let data0 of resp.data.content) {
-              data0.equipmentCount = data0.equipmentCount ? data0.equipmentCount : 0
-              this.tableData.push(data0)
-            }
+            this.tableData = resp.data.content
           } else {
 
           }
@@ -169,28 +114,13 @@
         })
       },
       onCreate() {
-        this.typeModelDisabled = true
         this.infoDialog = true
         this.$nextTick(() => {
           this.infoData = {
-            typeId: "",
-            typeName: "",
-            typeBrand: false,
-            typeModel: false,
-            typeSecrecy: false,
-            typeIp: false,
-            typeSn: false,
-            typeMac: false
+            secrecyId: "",
+            secrecyName: ""
           }
         })
-      },
-      typeBrandChange(val) {
-        if (val) {
-          this.typeModelDisabled = false
-        } else {
-          this.infoData.typeModel = false
-          this.typeModelDisabled = true
-        }
       },
       handleSizeChange(val) {
         this.searchFrom.pageSize = val
@@ -203,7 +133,6 @@
       handleEdit(index, row) {
         this.infoDialog = true
         this.$nextTick(() => {
-          this.typeModelDisabled = !row.typeBrand
           this.infoData = row
         })
       },
@@ -213,7 +142,7 @@
           if (valid) {
             let formData = this.$querystring.stringify(this.infoData)
             this.$axios.post(
-              "/equipment/type/edit",
+              "/equipment/secrecy/edit",
               formData,
               {
                 headers: {"content-type": "application/x-www-form-urlencoded;charset=utf-8"}

@@ -10,6 +10,10 @@ import Home from '../components/Home'
 import Equipment from "../components/equipment/Equipment";
 import EquipmentConfig from "../components/equipment/EquipmentConfig";
 import Type from "../components/equipment/config/Type";
+import Brand from "../components/equipment/config/Brand";
+import Model from "../components/equipment/config/Model";
+import Secrecy from "../components/equipment/config/Secrecy";
+import RegistrationReason from "../components/equipment/config/RegistrationReason";
 
 Vue.use(Router)
 const routerPush = Router.prototype.push
@@ -81,6 +85,34 @@ export default new Router({
               path: '/equipmentConfig/type',
               name: 'Type',
               component: Type,
+              meta: {
+                requireAuth: true
+              }
+            }, {
+              path: '/equipmentConfig/brand',
+              name: 'Brand',
+              component: Brand,
+              meta: {
+                requireAuth: true
+              }
+            }, {
+              path: '/equipmentConfig/model',
+              name: 'Model',
+              component: Model,
+              meta: {
+                requireAuth: true
+              }
+            }, {
+              path: '/equipmentConfig/secrecy',
+              name: 'Secrecy',
+              component: Secrecy,
+              meta: {
+                requireAuth: true
+              }
+            }, {
+              path: '/equipmentConfig/registrationReason',
+              name: 'RegistrationReason',
+              component: RegistrationReason,
               meta: {
                 requireAuth: true
               }
