@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-form :inline="true" :model="searchFrom" ref="searchFrom">
+    <el-form :inline="true" :model="searchFrom" ref="searchFrom" size="small">
       <el-form-item label="查找品牌">
         <el-input v-model="searchFrom.brandName" placeholder="查找设备品牌" clearable @change="onSearch"></el-input>
       </el-form-item>
@@ -24,6 +24,7 @@
     <el-table
       :data="tableData"
       style="width: 100%"
+      size="small"
       border
       stripe>
       <el-table-column
@@ -58,26 +59,31 @@
     </el-pagination>
     <el-dialog :visible.sync="infoDialog" destroy-on-close append-to-body>
       <div slot="title" style="color: #ffffff; font-size: larger">设备品牌信息</div>
-      <el-form inline :model="infoData" ref="infoData" :rules="infoRules" label-position="right" label-width="80px">
-        <el-col :span="24">
-          <el-form-item label="设备品牌" prop="brandName">
-            <el-input v-model="infoData.brandName" autocomplete="off" placeholder="请输入设备品牌"></el-input>
-          </el-form-item>
-        </el-col>
-        <el-col :span="24">
-          <el-form-item label="所属类型" prop="brandType" ref="brandType">
-            <el-select v-model="infoData.brandType" placeholder="请选择" :loading="typeListLoading" loading-text="载入中……"
-                       filterable>
-              <el-option
-                v-for="(item,i) in typeList"
-                v-if="item.typeBrand"
-                :key="i"
-                :label="item.typeName"
-                :value="item.typeId">
-              </el-option>
-            </el-select>
-          </el-form-item>
-        </el-col>
+      <el-form :model="infoData" ref="infoData" :rules="infoRules" label-position="right" label-width="80px"
+               size="small" v-loading="infoLoading">
+        <el-row type="flex" justify="space-between">
+          <el-col :span="24">
+            <el-form-item label="设备品牌" prop="brandName">
+              <el-input v-model="infoData.brandName" autocomplete="off" placeholder="请输入设备品牌"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row type="flex" justify="space-between">
+          <el-col :span="24">
+            <el-form-item label="所属类型" prop="brandType" ref="brandType">
+              <el-select v-model="infoData.brandType" placeholder="请选择" :loading="typeListLoading" loading-text="载入中……"
+                         filterable>
+                <el-option
+                  v-for="(item,i) in typeList"
+                  v-if="item.typeBrand"
+                  :key="i"
+                  :label="item.typeName"
+                  :value="item.typeId">
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       <div slot="footer" align="center">
         <el-button @click="infoDialog = false">取 消</el-button>
@@ -131,6 +137,7 @@
         typeList: [],
         loading: true,
         infoDialog: false,
+        infoLoading: true,
         formLoading: false,
         typeListLoading: true
       }
@@ -163,6 +170,7 @@
         })
       },
       onCreate() {
+        this.infoLoading = true
         this.infoDialog = true
         this.$nextTick(() => {
           this.infoData = {
@@ -171,6 +179,7 @@
             brandType: null
           }
           this.$refs["brandType"].resetField()
+          this.infoLoading = false
         })
       },
       handleSizeChange(val) {
@@ -182,9 +191,19 @@
         this.onSearch()
       },
       handleEdit(index, row) {
+        this.infoLoading = true
         this.infoDialog = true
         this.$nextTick(() => {
-          this.infoData = row
+          this.$axios.get("/equipment/brand/info", {
+            params: {
+              brandId: row.brandId
+            }
+          }).then(resp => {
+            if (resp && resp.status === 200) {
+              this.infoData = resp.data
+              this.infoLoading = false
+            }
+          })
         })
       },
       onSubmit() {

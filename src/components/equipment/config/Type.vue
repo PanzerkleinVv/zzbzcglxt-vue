@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-form :inline="true" :model="searchFrom" ref="searchFrom">
+    <el-form :inline="true" :model="searchFrom" ref="searchFrom" size="small">
       <el-form-item label="查找类型">
         <el-input v-model="searchFrom.typeName" placeholder="查找设备类型" clearable @change="onSearch"></el-input>
       </el-form-item>
@@ -12,6 +12,7 @@
     <el-table
       :data="tableData"
       style="width: 100%"
+      size="small"
       border
       stripe>
       <el-table-column
@@ -46,55 +47,64 @@
     </el-pagination>
     <el-dialog :visible.sync="infoDialog" destroy-on-close append-to-body>
       <div slot="title" style="color: #ffffff; font-size: larger">设备类型信息</div>
-      <el-form inline :model="infoData" ref="infoData" :rules="infoRules" label-position="right" label-width="80px">
-        <el-col :span="24">
-          <el-form-item label="设备类型" prop="typeName">
-            <el-input v-model="infoData.typeName" autocomplete="off" placeholder="请输入设备类型"></el-input>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要品牌">
-            &emsp;
-            <el-switch v-model="infoData.typeBrand" active-text="是" inactive-text="否" @change="typeBrandChange">
-            </el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要型号">
-            &emsp;
-            <el-switch v-model="infoData.typeModel" active-text="是" inactive-text="否" :disabled="typeModelDisabled"
-                       ref="typeModel">
-            </el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要密级">
-            &emsp;
-            <el-switch v-model="infoData.typeSecrecy" active-text="是" inactive-text="否">
-            </el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要IP">
-            &emsp;
-            <el-switch v-model="infoData.typeIp" active-text="是" inactive-text="否">
-            </el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要sn码">
-            &emsp;
-            <el-switch v-model="infoData.typeSn" active-text="是" inactive-text="否">
-            </el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="需要mac">
-            &emsp;
-            <el-switch v-model="infoData.typeMac" active-text="是" inactive-text="否">
-            </el-switch>
-          </el-form-item>
-        </el-col>
+      <el-form :model="infoData" ref="infoData" :rules="infoRules" label-position="right" label-width="80px"
+               size="small" v-loading="infoLoading">
+        <el-row type="flex" justify="space-between">
+          <el-col :span="24">
+            <el-form-item label="设备类型" prop="typeName">
+              <el-input v-model="infoData.typeName" autocomplete="off" placeholder="请输入设备类型"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row type="flex" justify="space-between">
+          <el-col :span="12">
+            <el-form-item label="需要品牌">
+              &emsp;
+              <el-switch v-model="infoData.typeBrand" active-text="是" inactive-text="否" @change="typeBrandChange">
+              </el-switch>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="需要型号">
+              &emsp;
+              <el-switch v-model="infoData.typeModel" active-text="是" inactive-text="否" :disabled="typeModelDisabled"
+                         ref="typeModel">
+              </el-switch>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row type="flex" justify="space-between">
+          <el-col :span="12">
+            <el-form-item label="需要密级">
+              &emsp;
+              <el-switch v-model="infoData.typeSecrecy" active-text="是" inactive-text="否">
+              </el-switch>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="需要IP">
+              &emsp;
+              <el-switch v-model="infoData.typeIp" active-text="是" inactive-text="否">
+              </el-switch>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row type="flex" justify="space-between">
+          <el-col :span="12">
+            <el-form-item label="需要sn码">
+              &emsp;
+              <el-switch v-model="infoData.typeSn" active-text="是" inactive-text="否">
+              </el-switch>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="需要mac">
+              &emsp;
+              <el-switch v-model="infoData.typeMac" active-text="是" inactive-text="否">
+              </el-switch>
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       <div slot="footer" align="center">
         <el-button @click="infoDialog = false">取 消</el-button>
@@ -138,6 +148,7 @@
         tableData: [],
         loading: true,
         infoDialog: false,
+        infoLoading: true,
         typeModelDisabled: true,
         formLoading: false
       }
@@ -170,6 +181,7 @@
       },
       onCreate() {
         this.typeModelDisabled = true
+        this.infoLoading = true
         this.infoDialog = true
         this.$nextTick(() => {
           this.infoData = {
@@ -182,6 +194,7 @@
             typeSn: false,
             typeMac: false
           }
+          this.infoLoading = false
         })
       },
       typeBrandChange(val) {
@@ -201,10 +214,20 @@
         this.onSearch()
       },
       handleEdit(index, row) {
+        this.infoLoading = true
         this.infoDialog = true
         this.$nextTick(() => {
-          this.typeModelDisabled = !row.typeBrand
-          this.infoData = row
+          this.$axios.get("/equipment/type/info", {
+            params: {
+              typeId: row.typeId
+            }
+          }).then(resp => {
+            if (resp && resp.status === 200) {
+              this.typeModelDisabled = !row.typeBrand
+              this.infoData = resp.data
+              this.infoLoading = false
+            }
+          })
         })
       },
       onSubmit() {

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-form :inline="true" :model="searchFrom" ref="searchFrom">
+    <el-form :inline="true" :model="searchFrom" ref="searchFrom" size="small">
       <el-form-item label="查找密级">
         <el-input v-model="searchFrom.secrecyName" placeholder="查找设备密级" clearable @change="onSearch"></el-input>
       </el-form-item>
@@ -12,6 +12,7 @@
     <el-table
       :data="tableData"
       style="width: 100%"
+      size="small"
       border
       stripe>
       <el-table-column
@@ -46,7 +47,8 @@
     </el-pagination>
     <el-dialog :visible.sync="infoDialog" destroy-on-close append-to-body>
       <div slot="title" style="color: #ffffff; font-size: larger">设备密级信息</div>
-      <el-form inline :model="infoData" ref="infoData" :rules="infoRules" label-position="right" label-width="80px">
+      <el-form :model="infoData" ref="infoData" :rules="infoRules" label-position="right" label-width="80px"
+               size="small" v-loading="infoLoading">
         <el-form-item label="设备类型" prop="secrecyName">
           <el-input v-model="infoData.secrecyName" autocomplete="off" placeholder="请输入设备密级"></el-input>
         </el-form-item>
@@ -88,7 +90,8 @@
         tableData: [],
         loading: true,
         infoDialog: false,
-        formLoading: false
+        formLoading: false,
+        infoLoading: true
       }
     },
     methods: {
@@ -114,12 +117,14 @@
         })
       },
       onCreate() {
+        this.infoLoading = true
         this.infoDialog = true
         this.$nextTick(() => {
           this.infoData = {
             secrecyId: "",
             secrecyName: ""
           }
+          this.infoLoading = false
         })
       },
       handleSizeChange(val) {
@@ -131,9 +136,19 @@
         this.onSearch()
       },
       handleEdit(index, row) {
+        this.infoLoading = true
         this.infoDialog = true
         this.$nextTick(() => {
-          this.infoData = row
+          this.$axios.get("/equipment/secrecy/info", {
+            params: {
+              secrecyId: row.secrecyId
+            }
+          }).then(resp => {
+            if (resp && resp.status === 200) {
+              this.infoData = resp.data
+              this.infoLoading = false
+            }
+          })
         })
       },
       onSubmit() {

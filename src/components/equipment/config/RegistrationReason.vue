@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-form :inline="true" :model="searchFrom" ref="searchFrom">
+    <el-form :inline="true" :model="searchFrom" ref="searchFrom" size="small">
       <el-form-item label="入库原由">
         <el-input v-model="searchFrom.registrationReasonName" placeholder="查找设备入库原由" clearable
                   @change="onSearch"></el-input>
@@ -13,6 +13,7 @@
     <el-table
       :data="tableData"
       style="width: 100%"
+      size="small"
       border
       stripe>
       <el-table-column
@@ -47,19 +48,24 @@
     </el-pagination>
     <el-dialog :visible.sync="infoDialog" destroy-on-close append-to-body>
       <div slot="title" style="color: #ffffff; font-size: larger">设备入库原由信息</div>
-      <el-form inline :model="infoData" ref="infoData" :rules="infoRules" label-position="right" label-width="80px">
-        <el-col :span="24">
-          <el-form-item label="入库原由" prop="registrationReasonName">
-            <el-input v-model="infoData.registrationReasonName" autocomplete="off" placeholder="请输入设备入库原由"></el-input>
-          </el-form-item>
-        </el-col>
-        <el-form-item label="入库原由" prop="registrationReasonName">
-          <el-form-item label="需要备注">
-            &emsp;
-            <el-switch v-model="infoData.registrationReasonNote" active-text="是" inactive-text="否">
-            </el-switch>
-          </el-form-item>
-        </el-form-item>
+      <el-form :model="infoData" ref="infoData" :rules="infoRules" label-position="right" label-width="80px"
+               size="small" v-loading="infoLoading">
+        <el-row type="flex" justify="space-between">
+          <el-col :span="24">
+            <el-form-item label="入库原由" prop="registrationReasonName">
+              <el-input v-model="infoData.registrationReasonName" autocomplete="off" placeholder="请输入设备入库原由"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row type="flex" justify="space-between">
+          <el-col :span="24">
+            <el-form-item label="需要备注">
+              &emsp;
+              <el-switch v-model="infoData.registrationReasonNote" active-text="是" inactive-text="否">
+              </el-switch>
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       <div slot="footer" align="center">
         <el-button @click="infoDialog = false">取 消</el-button>
@@ -98,6 +104,7 @@
         tableData: [],
         loading: true,
         infoDialog: false,
+        infoLoading: true,
         formLoading: false
       }
     },
@@ -124,6 +131,7 @@
         })
       },
       onCreate() {
+        this.infoLoading = true
         this.infoDialog = true
         this.$nextTick(() => {
           this.infoData = {
@@ -131,6 +139,7 @@
             registrationReasonName: "",
             registrationReasonNote: false
           }
+          this.infoLoading = false
         })
       },
       handleSizeChange(val) {
@@ -142,9 +151,19 @@
         this.onSearch()
       },
       handleEdit(index, row) {
+        this.infoLoading = true
         this.infoDialog = true
         this.$nextTick(() => {
-          this.infoData = row
+          this.$axios.get("/equipment/registrationReason/info", {
+            params: {
+              registrationReasonId: row.registrationReasonId
+            }
+          }).then(resp => {
+            if (resp && resp.status === 200) {
+              this.infoData = resp.data
+              this.infoLoading = false
+            }
+          })
         })
       },
       onSubmit() {

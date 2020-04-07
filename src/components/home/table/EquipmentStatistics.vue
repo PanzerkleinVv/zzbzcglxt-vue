@@ -5,6 +5,7 @@
       v-loading="loading"
       :data="tableData"
       style="width: 100%"
+      size="small"
       border
       stripe>
       <el-table-column

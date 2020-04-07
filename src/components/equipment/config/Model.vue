@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-form :inline="true" :model="searchFrom" ref="searchFrom">
+    <el-form :inline="true" :model="searchFrom" ref="searchFrom" size="small">
       <el-form-item label="查找型号">
         <el-input v-model="searchFrom.modelName" placeholder="查找设备型号" clearable @change="onSearch"></el-input>
       </el-form-item>
@@ -18,6 +18,7 @@
     <el-table
       :data="tableData"
       style="width: 100%"
+      size="small"
       border
       stripe>
       <el-table-column
@@ -52,19 +53,24 @@
     </el-pagination>
     <el-dialog :visible.sync="infoDialog" destroy-on-close append-to-body>
       <div slot="title" style="color: #ffffff; font-size: larger">设备型号信息</div>
-      <el-form inline :model="infoData" ref="infoData" :rules="infoRules" label-position="right" label-width="80px">
-        <el-col :span="24">
-          <el-form-item label="设备型号" prop="modelName">
-            <el-input v-model="infoData.modelName" autocomplete="off" placeholder="请输入设备型号"></el-input>
-          </el-form-item>
-        </el-col>
-        <el-col :span="24">
-          <el-form-item label="所属品牌" prop="modelBrand" ref="modelBrand">
-            <el-cascader
-              v-model="infoData.modelBrand" :props="{expandTrigger: 'hover', emitPath: false}" filterable
-              :options="options" placeholder="请选择" :loading="typeListLoading" loading-text="载入中……"></el-cascader>
-          </el-form-item>
-        </el-col>
+      <el-form :model="infoData" ref="infoData" :rules="infoRules" label-position="right" label-width="80px"
+               size="small" v-loading="infoLoading">
+        <el-row type="flex" justify="space-between">
+          <el-col :span="24">
+            <el-form-item label="设备型号" prop="modelName">
+              <el-input v-model="infoData.modelName" autocomplete="off" placeholder="请输入设备型号"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row type="flex" justify="space-between">
+          <el-col :span="24">
+            <el-form-item label="所属品牌" prop="modelBrand" ref="modelBrand">
+              <el-cascader
+                v-model="infoData.modelBrand" :props="{expandTrigger: 'hover', emitPath: false}" filterable
+                :options="options" placeholder="请选择" :loading="typeListLoading" loading-text="载入中……"></el-cascader>
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       <div slot="footer" align="center">
         <el-button @click="infoDialog = false">取 消</el-button>
@@ -123,6 +129,7 @@
         options: [],
         loading: true,
         infoDialog: false,
+        infoLoading: true,
         formLoading: false,
         typeListLoading: true
       }
@@ -155,6 +162,7 @@
         })
       },
       onCreate() {
+        this.infoLoading = true
         this.infoDialog = true
         this.$nextTick(() => {
           this.infoData = {
@@ -163,6 +171,7 @@
             modelBrand: ""
           }
           this.$refs["modelBrand"].resetField()
+          this.infoLoading = false
         })
       },
       handleSizeChange(val) {
@@ -174,9 +183,19 @@
         this.onSearch()
       },
       handleEdit(index, row) {
+        this.infoLoading = true
         this.infoDialog = true
         this.$nextTick(() => {
-          this.infoData = row
+          this.$axios.get("/equipment/model/info", {
+            params: {
+              modelId: row.modelId
+            }
+          }).then(resp => {
+            if (resp && resp.status === 200) {
+              this.infoData = resp.data
+              this.infoLoading = false
+            }
+          })
         })
       },
       onSubmit() {
