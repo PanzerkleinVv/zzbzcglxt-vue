@@ -14,6 +14,7 @@ import Brand from "../components/equipment/config/Brand";
 import Model from "../components/equipment/config/Model";
 import Secrecy from "../components/equipment/config/Secrecy";
 import RegistrationReason from "../components/equipment/config/RegistrationReason";
+import Consumable from "../components/consumable/Consumable";
 
 Vue.use(Router)
 const routerPush = Router.prototype.push
@@ -68,13 +69,19 @@ export default new Router({
             }
           ]
         }, {
+          path: '/equipment/:equipmentType/:equipmentStatus',
+          name: 'EquipmentQuery',
+          component: Equipment,
+          meta: {
+            requireAuth: true
+          }
+        }, {
           path: '/equipment',
           name: 'Equipment',
           component: Equipment,
           meta: {
             requireAuth: true
           }
-          //redirect: '/statistics'
         }, {
           path: '/equipmentConfig',
           name: 'EquipmentConfig',
@@ -118,6 +125,13 @@ export default new Router({
               }
             }
           ]
+        }, {
+          path: '/consumable',
+          name: 'Consumable',
+          component: Consumable,
+          meta: {
+            requireAuth: true
+          }
         }
       ]
     }, {

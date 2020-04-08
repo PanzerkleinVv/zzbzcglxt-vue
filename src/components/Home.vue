@@ -117,4 +117,14 @@
     color: #ffffff;
     padding: 10px 20px;
   }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: #a61515;
+    border-radius: 3px;
+  }
 </style>

@@ -1,23 +1,28 @@
 <template>
   <div>
-    <el-table
-      id="tableData"
-      v-loading="loading"
-      :data="tableData"
-      style="width: 100%"
-      size="small"
-      border
-      stripe>
-      <el-table-column
-        v-for="(item, i) in tableHeader"
-        :prop="item.prop"
-        :label="item.label"
-        :sortable="item.sortable"
-        :fixed="item.fixed"
-        :key="i">
-      </el-table-column>
-    </el-table>
-    <el-button type="primary" @click="exportExcel()" :loading="exportLoading">{{ exportLoading ? '导出中 ...' : '导 出' }}</el-button>
+    <el-popover content="双击单元格，按条件查询设备" trigger="hover" placement="top-end">
+      <el-table
+        id="tableData"
+        v-loading="loading"
+        :data="tableData"
+        style="width: 100%"
+        size="small"
+        border
+        stripe
+        @cell-dblclick="queryCell"
+        slot="reference">
+        <el-table-column
+          v-for="(item, i) in tableHeader"
+          :prop="item.prop"
+          :label="item.label"
+          :sortable="item.sortable"
+          :fixed="item.fixed"
+          :key="i">
+        </el-table-column>
+      </el-table>
+    </el-popover>
+    <el-button type="primary" @click="exportExcel()" :loading="exportLoading">{{ exportLoading ? '导出中 ...' : '导 出' }}
+    </el-button>
   </div>
 </template>
 
@@ -36,7 +41,7 @@
           fixed: true
         }, {
           prop: "keep",
-          label: "暂存",
+          label: "库存",
           sortable: true
         }, {
           prop: "lend",
@@ -44,7 +49,7 @@
           sortable: true
         }, {
           prop: "repair",
-          label: "报修",
+          label: "维修",
           sortable: true
         }, {
           prop: "unsure",
@@ -73,6 +78,33 @@
       };
     },
     methods: {
+      queryCell(row, column, cell, event) {
+        let equipmentStatus
+        switch (column.property) {
+          case "keep":
+            equipmentStatus = 2
+            break
+          case "lend":
+            equipmentStatus = 1
+            break
+          case "repair":
+            equipmentStatus = 3
+            break
+          case "abandon":
+            equipmentStatus = 0
+            break
+          case "give":
+            equipmentStatus = 4
+            break
+          case "typeName":
+          case "total":
+            equipmentStatus = 5
+            break
+          default:
+            return false
+        }
+        this.$router.push("/equipment/" + row.typeId + "/" + equipmentStatus)
+      },
       init() {
         this.loading = true
         this.$axios.get('/statistics/equipment').then(resp => {

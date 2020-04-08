@@ -85,16 +85,19 @@
         }
         if (index.indexOf("statistics") > -1) {
           this.activeIndex = "/statistics"
+        } else if (index.indexOf("/equipment/") === 0) {
+          this.activeIndex = "/equipment"
         } else {
           this.activeIndex = index
         }
+
       }
     },
     mounted() {
       this.init()
     },
     watch: {
-      tabIndex: function(val) {
+      tabIndex: function (val) {
         if (val.length > 0) {
           this.init(val)
         }

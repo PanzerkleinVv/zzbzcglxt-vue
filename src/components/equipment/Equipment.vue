@@ -50,7 +50,7 @@
           <el-form-item>
             <el-button type="primary" @click="onSearch">查询</el-button>
             <el-button type="success" @click="onCreate">新增</el-button>
-            <el-button @click="onMultipleAdmin">批量管理</el-button>
+            <el-button type="info" @click="onMultipleAdmin">批量管理</el-button>
           </el-form-item>
         </el-col>
       </el-row>
@@ -60,7 +60,8 @@
       style="width: 100%"
       size="small"
       border
-      stripe>
+      stripe
+      @selection-change="changeSelectRows">
       <el-table-column
         type="selection"
         width="40"
@@ -94,7 +95,6 @@
     <el-pagination
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
-      :hide-on-single-page=true
       :current-page="searchFrom.pageNum"
       :page-sizes="[10, 20, 30]"
       :page-size="searchFrom.pageSize"
@@ -122,7 +122,7 @@
           </el-col>
         </el-row>
         <el-row type="flex" justify="space-between">
-          <el-col :span="12" :hidden="!currentType.typeSecrecy">
+          <el-col :span="12" :hidden="!currentType.typeSecrecy" v-if="currentType.typeSecrecy">
             <el-form-item label="设备密级" prop="equipmentSecrecy" ref="equipmentSecrecy">
               <el-select v-model="infoData.equipmentSecrecy" placeholder="请选择" :loading="secrecyListLoading"
                          loading-text="载入中……" :disabled="!currentType.typeSecrecy"
@@ -136,7 +136,7 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="12" :hidden="!currentType.typeIp">
+          <el-col :span="12" :hidden="!currentType.typeIp" v-if="currentType.typeIp">
             <el-form-item label="IP" prop="equipmentIp" ref="equipmentIp">
               <el-input v-model="infoData.equipmentIp" autocomplete="off" placeholder="请输入设备IP"
                         :disabled="!currentType.typeIp" clearable></el-input>
@@ -144,13 +144,13 @@
           </el-col>
         </el-row>
         <el-row type="flex" justify="space-between">
-          <el-col :span="12" :hidden="!currentType.typeMac">
+          <el-col :span="12" :hidden="!currentType.typeMac" v-if="currentType.typeMac">
             <el-form-item label="mac" prop="equipmentMac" ref="equipmentMac">
               <el-input v-model="infoData.equipmentMac" autocomplete="off" placeholder="请输入设备mac"
                         :disabled="!currentType.typeMac"></el-input>
             </el-form-item>
           </el-col>
-          <el-col :span="12" :hidden="!currentType.typeSn">
+          <el-col :span="12" :hidden="!currentType.typeSn" v-if="currentType.typeSn">
             <el-form-item label="sn码" prop="equipmentSn" ref="equipmentSn">
               <el-input v-model="infoData.equipmentSn" autocomplete="off" placeholder="请输入设备sn码"
                         :disabled="!currentType.typeSn"></el-input>
@@ -185,7 +185,7 @@
           </el-col>
         </el-row>
         <el-row type="flex" justify="space-between">
-          <el-col :span="24" :hidden="!equipmentRegistrationNoteDisabled">
+          <el-col :span="24" :hidden="!equipmentRegistrationNoteDisabled" v-if="equipmentRegistrationNoteDisabled">
             <el-form-item label="入库备注" prop="equipmentRegistrationNote" ref="equipmentRegistrationNote">
               <el-input v-model="infoData.equipmentRegistrationNote" autocomplete="on" placeholder="设备入库来源备注"
                         :disabled="!equipmentRegistrationNoteDisabled"></el-input>
@@ -211,7 +211,6 @@
     <el-dialog :visible.sync="adminDialog" destroy-on-close append-to-body>
       <div slot="title" style="color: #ffffff; font-size: larger">设备管理</div>
       <el-card>
-        <div slot="header" style="font-size: large">设备信息</div>
         <div v-loading="adminLoading" style="line-height:1.5;">
           <el-row>
             <el-col :span="2"><b>编号:</b></el-col>
@@ -227,7 +226,7 @@
             <el-col :span="2"><b>状态:</b></el-col>
             <el-col :span="10">{{equipmentStatusCode[adminData.equipmentStatus]}}</el-col>
             <el-col :span="2"><b>所在:</b></el-col>
-            <el-col :span="10">{{adminData.logTarget}}</el-col>
+            <el-col :span="10">{{adminData.logTarget == null ? "未定" : adminData.logTarget}}</el-col>
           </el-row>
           <el-row>
             <el-col :span="2"><b>来源:</b></el-col>
@@ -240,83 +239,169 @@
           </el-row>
         </div>
       </el-card>
-      <fieldset>
-        <legend style="font-size: large">管理操作</legend>
-        <button_group></button_group>
-      </fieldset>
-      <el-form :model="adminData" ref="adminData" :rules="adminRules" label-position="right" label-width="80px"
-               size="small" v-loading="adminLoading">
+      <div style="max-height: 400px; overflow: auto;">
+        <el-divider content-position="left" style="font-size: large">管理操作</el-divider>
+        <el-card v-loading="adminLoading">
+          <el-row type="flex" justify="space-between">
+            <el-col :span="24" align="center">
+            <span :hidden="adminButtonHidden[0]">
+              <el-button size="mini" @click="adminType = 0" type="success">借出
+              </el-button>
+            </span>
+              <span :hidden="adminButtonHidden[1]">
+              <el-button size="mini" @click="adminType = 1" type="success">归还
+              </el-button>
+            </span>
+              <span :hidden="adminButtonHidden[2]">
+              <el-button size="mini" @click="adminType = 2" type="warning">报修
+              </el-button>
+            </span>
+              <span :hidden="adminButtonHidden[3]">
+              <el-button size="mini" @click="adminType = 3" type="primary">报废
+              </el-button>
+            </span>
+              <span :hidden="adminButtonHidden[4]">
+              <el-button size="mini" @click="adminType = 4" type="info">存放
+              </el-button>
+            </span>
+              <span :hidden="adminButtonHidden[5]">
+              <el-button size="mini" @click="adminType = 5" type="success">调拨
+              </el-button>
+            </span>
+              <span :hidden="adminButtonHidden[6]">
+              <el-popconfirm title="确定销毁？(该操作将彻底删除这个设备)" iconColor="#A61515" @onConfirm="deleteEquipment">
+                 <el-button size="mini" slot="reference" type="warning">销毁</el-button>
+              </el-popconfirm>
+            </span>
+            </el-col>
+          </el-row>
+          <el-form :model="adminForm[adminType]" ref="adminForm" :rules="adminRules" label-position="left"
+                   label-width="65px"
+                   size="mini" style="margin-top: 10px"
+                   :hidden="adminForm[adminType].adminFormHidden">
+            <el-row type="flex" justify="space-between" :gutter="10">
+              <el-col :span="24">
+                <el-form-item label="日期" prop="logOperationDate" ref="logOperationDate">
+                  <el-date-picker
+                    v-model="adminForm[adminType].logOperationDate"
+                    type="date"
+                    placeholder="选择操作日期"
+                    format="yyyy 年 MM 月 dd 日"
+                    value-format="yyyy-MM-dd">
+                  </el-date-picker>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row type="flex" justify="space-between" :gutter="10">
+              <el-col :span="12" :hidden="adminForm[adminType].logTargetDisabled"
+                      v-if="!adminForm[adminType].logTargetDisabled">
+                <el-form-item :label="adminForm[adminType].targetName" prop="logTarget" ref="logTarget">
+                  <el-input v-model="adminForm[adminType].logTarget" autocomplete="on"
+                            :disabled="adminForm[adminType].logTargetDisabled"
+                            :placeholder="adminForm[adminType].targetPlaceholder"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="经手人">
+                  <el-input v-model="adminForm[adminType].userName" readonly></el-input>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row type="flex" justify="space-between">
+              <el-col :span="24" align="center">
+                <el-button @click="adminType = 6" size="mini">取 消</el-button>
+                <el-button type="primary" @click="adminSubmit" :loading="formLoading" size="mini">
+                  {{ formLoading?'提交中 ...':'确定'}}
+                </el-button>
+              </el-col>
+            </el-row>
+          </el-form>
+          <template v-if="adminData.equipmentStatus === 4">
+            <div align="center" style="font-size: x-small; color: #909399">无可用操作</div>
+          </template>
+        </el-card>
+        <el-divider content-position="left" style="font-size: large">管理日志</el-divider>
+        <el-timeline>
+          <el-timeline-item
+            v-for="(item, i) in adminData.logs"
+            :key="i"
+            :type="logStatusCode[item.logStatus].type"
+            size="large"
+            placement="top"
+            :timestamp="item.logOperationDate">
+            <el-card>
+              <el-row>
+                <el-col :span="24"><h4>{{logStatusCode[item.logStatus].name}}</h4></el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="3" style="font-size: x-small"><b>{{logStatusCode[item.logStatus].targetName ?
+                  logStatusCode[item.logStatus].targetName + "：" : ''}}</b></el-col>
+                <el-col :span="9" style="font-size: x-small">{{item.logTarget}}</el-col>
+                <el-col :span="3" style="font-size: x-small"><b>经手人:</b></el-col>
+                <el-col :span="9" style="font-size: x-small">{{item.userName}}</el-col>
+              </el-row>
+            </el-card>
+          </el-timeline-item>
+        </el-timeline>
+      </div>
+      <div slot="footer" align="center">
+        <el-button @click="adminDialog = false">取 消</el-button>
+      </div>
+    </el-dialog>
+    <el-dialog :visible.sync="multipleDialog" destroy-on-close append-to-body>
+      <div slot="title" style="color: #ffffff; font-size: larger">设备信息</div>
+      <el-form :model="multipleData" ref="multipleData" :rules="multipleRules" label-position="right" label-width="80px"
+               size="small" v-loading="infoLoading">
         <el-row type="flex" justify="space-between">
           <el-col :span="24">
-            <el-form-item label="设备编号" prop="equipmentName" ref="equipmentName">
-              <el-input v-model="infoData.equipmentName" autocomplete="off" placeholder="请输入设备编号"></el-input>
-            </el-form-item>
+            <el-popover
+              trigger="hover">
+              <el-table size="mini" :data="multipleSelection" :show-header="false">
+                <el-table-column property="equipmentName"></el-table-column>
+                <el-table-column property="typeName"></el-table-column>
+                <el-table-column property="brandName"></el-table-column>
+                <el-table-column property="modelName"></el-table-column>
+              </el-table>
+              <el-form-item label="已选设备" slot="reference">
+                <el-input v-model="'已选择' + multipleSelection.length + '台设备'" readonly></el-input>
+              </el-form-item>
+            </el-popover>
           </el-col>
         </el-row>
         <el-row type="flex" justify="space-between">
-          <el-col :span="24">
-            <el-form-item label="设备分类" prop="typeBrandModel" ref="typeBrandModel">
-              <el-cascader
-                v-model="infoData.typeBrandModel" :props="{expandTrigger: 'hover'}" filterable @change="switchType"
-                :options="options" placeholder="请选择" :loading="typeListLoading" loading-text="载入中……"></el-cascader>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row type="flex" justify="space-between">
-          <el-col :span="12" :hidden="!currentType.typeSecrecy">
-            <el-form-item label="设备密级" prop="equipmentSecrecy" ref="equipmentSecrecy">
-              <el-select v-model="infoData.equipmentSecrecy" placeholder="请选择" :loading="secrecyListLoading"
-                         loading-text="载入中……" :disabled="!currentType.typeSecrecy"
-                         filterable>
+          <el-col :span="12">
+            <el-form-item label="可用操作" prop="logStatus" ref="logStatus">
+              <el-select v-model="multipleData.logStatus" placeholder="请选择" filterable @change="multipleAdminChange">
                 <el-option
-                  v-for="(item,i) in secrecyList"
+                  v-for="(item,i) in logStatusCode"
                   :key="i"
-                  :label="item.secrecyName"
-                  :value="item.secrecyId">
-                </el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12" :hidden="!currentType.typeIp">
-            <el-form-item label="IP" prop="equipmentIp" ref="equipmentIp">
-              <el-input v-model="infoData.equipmentIp" autocomplete="off" placeholder="请输入设备IP"
-                        :disabled="!currentType.typeIp" clearable></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row type="flex" justify="space-between">
-          <el-col :span="12" :hidden="!currentType.typeMac">
-            <el-form-item label="mac" prop="equipmentMac" ref="equipmentMac">
-              <el-input v-model="infoData.equipmentMac" autocomplete="off" placeholder="请输入设备mac"
-                        :disabled="!currentType.typeMac"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12" :hidden="!currentType.typeSn">
-            <el-form-item label="sn码" prop="equipmentSn" ref="equipmentSn">
-              <el-input v-model="infoData.equipmentSn" autocomplete="off" placeholder="请输入设备sn码"
-                        :disabled="!currentType.typeSn"></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row type="flex" justify="space-between">
-          <el-col :span="24">
-            <el-form-item label="入库原因" prop="equipmentRegistrationReason" ref="equipmentRegistrationReason">
-              <el-select v-model="infoData.equipmentRegistrationReason" placeholder="请选择"
-                         :loading="registrationReasonListLoading" loading-text="载入中……"
-                         filterable @change="switchRegistrationReason">
-                <el-option
-                  v-for="(item,i) in registrationReasonList"
-                  :key="i"
-                  :label="item.registrationReasonName"
-                  :value="item.registrationReasonId">
+                  :label="item.name"
+                  :value="i"
+                  :disabled="multipleAdminDisabled[i]">
                 </el-option>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="入库日期" prop="equipmentRegistrationDate" ref="equipmentRegistrationDate">
+            <el-form-item label="经手人">
+              <el-input v-model="multipleData.userName" readonly></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row type="flex" justify="space-between">
+          <el-col :span="12" :hidden="multipleLogTargetDisable"
+                  v-if="multipleData.logStatus != null && !multipleLogTargetDisable">
+            <el-form-item :label="multipleTargetName" prop="logTarget" ref="logTarget">
+              <el-input v-model="multipleData.logTarget" autocomplete="on"
+                        :placeholder="'请输入' + multipleTargetName"
+                        :disabled="multipleLogTargetDisable"
+                        clearable></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="操作日期" prop="logOperationDate" ref="logOperationDate">
               <el-date-picker
-                v-model="infoData.equipmentRegistrationDate"
+                v-model="multipleData.logOperationDate"
                 type="date"
                 placeholder="选择入库日期"
                 format="yyyy 年 MM 月 dd 日"
@@ -325,26 +410,10 @@
             </el-form-item>
           </el-col>
         </el-row>
-        <el-row type="flex" justify="space-between">
-          <el-col :span="24" :hidden="!equipmentRegistrationNoteDisabled">
-            <el-form-item label="入库备注" prop="equipmentRegistrationNote" ref="equipmentRegistrationNote">
-              <el-input v-model="infoData.equipmentRegistrationNote" autocomplete="on" placeholder="设备入库来源备注"
-                        :disabled="!equipmentRegistrationNoteDisabled"></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row type="flex" justify="space-between">
-          <el-col :span="24">
-            <el-form-item label="备注">
-              <el-input type="textarea" v-model="infoData.equipmentNote" autocomplete="on"
-                        placeholder="设备备注"></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
       </el-form>
       <div slot="footer" align="center">
-        <el-button @click="infoDialog = false">取 消</el-button>
-        <el-button type="primary" @click="onSubmit" :loading="formLoading">
+        <el-button @click="multipleDialog = false">取 消</el-button>
+        <el-button type="primary" @click="multipleSubmit" :loading="formLoading">
           {{ formLoading?'提交中 ...':'确定'}}
         </el-button>
       </div>
@@ -481,7 +550,89 @@
         equipmentStatusCode: ['报废', '借出', '库存', '维修', '调拨'],
         adminDialog: false,
         adminLoading: true,
-        adminData: {}
+        adminData: {},
+        adminType: 6,
+        adminForm: [
+          {
+            targetName: "借出人",
+            logTargetDisabled: false,
+            targetPlaceholder: "请填写借出人",
+            logOperationDate: "",
+            adminFormHidden: false
+          },
+          {
+            targetName: "存放地",
+            logTargetDisabled: false,
+            targetPlaceholder: "请填写存放地",
+            logOperationDate: "",
+            adminFormHidden: false
+          },
+          {
+            targetName: "",
+            logTargetDisabled: true,
+            targetPlaceholder: "",
+            logOperationDate: "",
+            adminFormHidden: false
+          },
+          {
+            targetName: "存放地",
+            logTargetDisabled: false,
+            targetPlaceholder: "请填写存放地",
+            logOperationDate: "",
+            adminFormHidden: false
+          },
+          {
+            targetName: "存放地",
+            logTargetDisabled: false,
+            targetPlaceholder: "请填写存放地",
+            logOperationDate: "",
+            adminFormHidden: false
+          },
+          {
+            targetName: "接收方",
+            logTargetDisabled: false,
+            targetPlaceholder: "请填写接收方",
+            logOperationDate: "",
+            adminFormHidden: false
+          },
+          {targetName: "", logTargetDisabled: true, targetPlaceholder: "", logOperationDate: "", adminFormHidden: true}
+        ],
+        adminButtonHidden: [false, true, false, true, false, false, true],
+        adminRules: {
+          logTarget: [
+            {required: true, message: "请填写", trigger: 'blur'}
+          ],
+          logOperationDate: [
+            {required: true, message: '请选择操作日期', trigger: 'change'}
+          ]
+        },
+        logStatusCode: [
+          {name: "借出", type: 'success', targetName: '借出人'},
+          {name: "归还", type: 'success', targetName: '存放地'},
+          {name: "报修", type: 'warning'},
+          {name: "报废", type: 'primary', targetName: '存放地'},
+          {name: "存放", type: 'info', targetName: '存放地'},
+          {name: "调拨", type: 'success', targetName: '接收方'}
+        ],
+        multipleSelection: [],
+        multipleDialog: false,
+        multipleData: {},
+        multipleRules: {
+          logTarget: [
+            {required: true, message: "请填写", trigger: 'blur'}
+          ],
+          logOperationDate: [
+            {required: true, message: '请选择操作日期', trigger: 'change'}
+          ],
+          logStatus: [
+            {required: true, message: '请选择', trigger: 'change'}
+          ]
+        },
+        multipleAdminDisabled: [false, false, false, false, false, false],
+        multipleLogTargetDisable: true,
+        multipleTargetName: "",
+        userName: "",
+        firstLoadFlag: true
       }
     },
     methods: {
@@ -523,7 +674,7 @@
         this.infoDialog = true
         this.$nextTick(() => {
           this.infoData = {
-            equipmentID: "",
+            equipmentId: "",
             typeBrandModel: []
           }
           this.$refs['infoData'].resetFields()
@@ -538,7 +689,59 @@
         })
       },
       onMultipleAdmin() {
-
+        if (this.multipleSelection.length < 1) {
+          this.$message({
+            message: "请至少选择一个设备",
+            type: 'error'
+          })
+          return false
+        } else {
+          this.infoLoading = true
+          this.multipleDialog = true
+          this.$nextTick(() => {
+            this.multipleData = {
+              logStatus: "",
+              logOperationDate: ""
+            }
+            this.$refs.logOperationDate.resetField()
+            this.$refs.logStatus.resetField()
+            this.multipleData.userName = this.userName
+            this.multipleAdminDisabled = [false, false, false, false, false, false]
+            this.multipleData.multipleLogEquipment = []
+            for (let equipment of this.multipleSelection) {
+              this.multipleData.multipleLogEquipment.push(equipment.equipmentId)
+              switch (equipment.equipmentStatus) {
+                case 0:
+                  this.multipleAdminDisabled[0] = true
+                  this.multipleAdminDisabled[1] = true
+                  this.multipleAdminDisabled[2] = true
+                  this.multipleAdminDisabled[3] = true
+                  this.multipleAdminDisabled[4] = true
+                  break
+                case 1:
+                  this.multipleAdminDisabled[0] = true
+                  this.multipleAdminDisabled[4] = true
+                  this.multipleAdminDisabled[5] = true
+                  break
+                case 2:
+                case 3:
+                  this.multipleAdminDisabled[1] = true
+                  break
+                case 4:
+                  this.multipleAdminDisabled[0] = true
+                  this.multipleAdminDisabled[1] = true
+                  this.multipleAdminDisabled[2] = true
+                  this.multipleAdminDisabled[3] = true
+                  this.multipleAdminDisabled[4] = true
+                  this.multipleAdminDisabled[5] = true
+                default:
+                  this.multipleAdminDisabled[1] = true
+                  this.multipleAdminDisabled[3] = true
+              }
+              this.infoLoading = false
+            }
+          })
+        }
       },
       handleSizeChange(val) {
         this.searchFrom.pageSize = val
@@ -601,6 +804,25 @@
             if (resp && resp.status === 200) {
               this.adminData = resp.data
               this.adminLoading = false
+              this.adminType = 6
+              switch (this.adminData.equipmentStatus) {
+                case 0:
+                  this.adminButtonHidden = [true, true, true, true, false, true, false]
+                  break
+                case 1:
+                  this.adminButtonHidden = [true, false, false, false, true, true, true]
+                  break
+                case 2:
+                case 3:
+                  this.adminButtonHidden = [false, true, false, false, false, false, true]
+                  break
+                case 4:
+                  this.adminButtonHidden = [true, true, true, true, true, true, true]
+                  break
+                default:
+                  this.adminButtonHidden = [false, true, false, true, false, false, true]
+                  break
+              }
             }
           })
         })
@@ -612,7 +834,6 @@
             this.infoData.equipmentType = this.infoData.typeBrandModel[0]
             this.infoData.equipmentBrand = this.infoData.typeBrandModel[1]
             this.infoData.equipmentModel = this.infoData.typeBrandModel[2]
-            console.log(this.infoData.equipmentRegistrationDate)
             let formData = this.$querystring.stringify(this.infoData)
             this.$axios.post(
               "/equipment/edit",
@@ -625,19 +846,122 @@
                     this.$message({
                       message: resp.data.content,
                       type: 'success'
-                    });
+                    })
                     this.init()
                     this.infoDialog = false
+                    this.formLoading = false
                   } else {
                     this.$message({
                       message: resp.data.content,
                       type: 'error'
-                    });
+                    })
                   }
                 } else {
 
                 }
                 this.formLoading = false
+              }
+            )
+          } else {
+            this.formLoading = false
+          }
+        })
+      },
+      deleteEquipment() {
+        this.formLoading = true
+        this.$axios.get(
+          "/equipment/log/delete",
+          {
+            params: {equipmentId: this.adminData.equipmentId}
+          }
+        ).then(resp => {
+          if (resp && resp.status === 200) {
+            if (resp.data.result) {
+              this.$message({
+                message: resp.data.content,
+                type: 'success'
+              })
+              this.init()
+              this.adminDialog = false
+              this.formLoading = false
+            } else {
+              this.$message({
+                message: resp.data.content,
+                type: 'error'
+              })
+              this.formLoading = false
+            }
+          }
+          this.formLoading = false
+        })
+      },
+      adminSubmit() {
+        this.formLoading = true
+        this.$refs.adminForm.validate((valid) => {
+          if (valid) {
+            this.adminForm[this.adminType].logEquipment = this.adminData.equipmentId
+            this.adminForm[this.adminType].logStatus = this.adminType
+            let formData = this.$querystring.stringify(this.adminForm[this.adminType])
+            this.$axios.post(
+              "/equipment/log/save",
+              formData,
+              {
+                headers: {"content-type": "application/x-www-form-urlencoded;charset=utf-8"}
+              }).then(resp => {
+                if (resp && resp.status === 200) {
+                  if (resp.data.result) {
+                    this.$message({
+                      message: resp.data.content,
+                      type: 'success'
+                    })
+                    this.init()
+                    this.adminDialog = false
+                    this.formLoading = false
+                  } else {
+                    this.$message({
+                      message: resp.data.content,
+                      type: 'error'
+                    })
+                  }
+                } else {
+                  this.formLoading = false
+                }
+              }
+            )
+          } else {
+            this.formLoading = false
+          }
+        })
+      },
+      multipleSubmit() {
+        this.formLoading = true
+        this.$refs.multipleData.validate((valid) => {
+          if (valid) {
+            let formData = this.$querystring.stringify(this.multipleData)
+            this.$axios.post(
+              "/equipment/log/multipleSave",
+              formData,
+              {
+                headers: {"content-type": "application/x-www-form-urlencoded;charset=utf-8"}
+              }).then(resp => {
+                if (resp && resp.status === 200) {
+                  if (resp.data.result) {
+                    this.$message({
+                      message: resp.data.content,
+                      type: 'success'
+                    })
+                    this.init()
+                    this.multipleDialog = false
+                    this.formLoading = false
+                  } else {
+                    this.$message({
+                      message: resp.data.content,
+                      type: 'error'
+                    })
+                  }
+                } else {
+                  this.formLoading = false
+                }
               }
             )
           } else {
@@ -703,11 +1027,42 @@
           }
         })
       },
+      getUser() {
+        this.$axios.get("/user/me").then(resp => {
+          if (resp && resp.status === 200) {
+            for (let adminForm0 of this.adminForm) {
+              adminForm0.userName = resp.data.userName
+            }
+            this.userName = resp.data.userName
+          } else {
+
+          }
+        })
+      },
+      changeSelectRows(val) {
+        this.multipleSelection = val
+      },
+      multipleAdminChange(val) {
+        if (this.logStatusCode[val].targetName == null) {
+          this.multipleLogTargetDisable = true
+          this.multipleTargetName = ""
+        } else {
+          this.multipleLogTargetDisable = false
+          this.multipleTargetName = this.logStatusCode[val].targetName
+        }
+        this.multipleData.userName = this.userName
+      },
       init() {
-        this.$emit("title", "设备管理")
-        this.getTypeList()
-        this.getSecrecyList()
-        this.getRegistrationReasonList()
+        if (this.firstLoadFlag) {
+          this.$emit("title", "设备管理")
+          this.getTypeList()
+          this.getSecrecyList()
+          this.getRegistrationReasonList()
+          this.getUser()
+          this.searchFrom.typeBrandModel[0] = this.$route.params.equipmentType
+          this.searchFrom.equipmentStatus = this.$route.params.equipmentStatus
+          this.firstLoadFlag = false
+        }
         this.onSearch()
       }
     },
@@ -723,3 +1078,4 @@
   }
 
 </style>
+
