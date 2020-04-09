@@ -20,7 +20,7 @@ Vue.use(ElementUI)
 
 router.beforeEach((to, from, next) => {
     if (to.meta.requireAuth) {
-      if (store.state.user.userName) {
+      if (store.state.user && store.state.user.userName) {
         next()
       } else {
         next({
@@ -34,12 +34,23 @@ router.beforeEach((to, from, next) => {
   }
 )
 
+axios.interceptors.response.use(response => Promise.resolve(response),
+  error => { // 这里对 error 预期结果是包含具体错误信息和状态码
+    if (error) {
+      store.commit('logout')
+      router.push({
+        path: '/login',
+        query: {message: '登录超时，请重新登陆'}
+      })
+    }
+  })
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
   render: h => h(App),
   router,
   store,
-  components: { App },
+  components: {App},
   template: '<App/>'
 })

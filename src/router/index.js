@@ -15,6 +15,7 @@ import Model from "../components/equipment/config/Model";
 import Secrecy from "../components/equipment/config/Secrecy";
 import RegistrationReason from "../components/equipment/config/RegistrationReason";
 import Consumable from "../components/consumable/Consumable";
+import Ledger from "../components/consumable/Ledger";
 
 Vue.use(Router)
 const routerPush = Router.prototype.push
@@ -132,12 +133,23 @@ export default new Router({
           meta: {
             requireAuth: true
           }
+        }, {
+          path: '/ledger',
+          name: 'Ledger',
+          component: Ledger,
+          meta: {
+            requireAuth: true
+          }
         }
       ]
     }, {
       path: '/login',
       name: 'Login',
       component: Login
+    }, {
+      path: '/',
+      name: 'Root',
+      redirect: '/statistics/'
     }
   ]
 })

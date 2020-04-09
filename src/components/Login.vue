@@ -38,17 +38,28 @@
           .post('/login', {
             userName: this.loginForm.userName,
             userPsw: this.$sha256(this.loginForm.userPsw)
-          })
-          .then(successResponse => {
-            if (successResponse.data.code === 200) {
-              _this.$store.commit('login', _this.loginForm)
-              let path = this.$route.query.redirect
-              this.$router.replace({path: path === '/' || path === undefined ? '/statistics' : path})
-            }
-          })
-          .catch(failResponse => {
-          })
+          }).then(successResponse => {
+          if (successResponse.data.code === 200) {
+            _this.$store.commit('login', _this.loginForm)
+            let path = this.$route.query.redirect
+            this.$router.replace({path: path === '/' || path === undefined ? '/statistics' : path})
+          }
+        }).catch(failResponse => {
+
+        })
+      },
+      init() {
+        if (this.$route.query.message) {
+          this.$notify.error({
+            title: '错误',
+            message: this.$route.query.message,
+            duration: 0
+          });
+        }
       }
+    },
+    mounted() {
+      this.init()
     }
   }
 </script>

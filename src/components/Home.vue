@@ -1,22 +1,25 @@
 <template>
   <body id="home">
   <el-container>
-    <el-header>信息处资产管理系统</el-header>
+    <el-header>
+      <div>信息处资产管理系统</div>
+      <div style="position: fixed; top: 0; right: 20px;">
+        <el-tag size="mini">用户：{{this.$store.getters.getUser.userName}}</el-tag>
+        <el-button size="mini" circle type="primary" icon="el-icon-close" @click="logout"></el-button>
+      </div>
+    </el-header>
     <el-container>
       <el-aside width="200px">
         <nav-menu :tabIndex="tabIndex"></nav-menu>
       </el-aside>
       <el-container>
-        <el-main class="home-main-container">
-          <el-card class="box-card">
+        <el-main>
+          <el-card>
             <el-page-header slot="header" class="main-card" @back="goBack">
               <div class="main-card" slot="content">{{cardHeader}}</div>
             </el-page-header>
             <router-view @title="title" @tabClick="tabClick"/>
           </el-card>
-          <template>
-            <el-backtop target=".home-main-container"></el-backtop>
-          </template>
         </el-main>
       </el-container>
     </el-container>
@@ -46,6 +49,17 @@
       },
       tabClick(str) {
         this.tabIndex = str
+      },
+      logout() {
+        this.$axios.get(
+          '/logout'
+        ).then(successResponse => {
+          this.$store.commit('logout')
+          this.$router.go(0)
+        }).catch(failResponse => {
+          this.$store.commit('logout')
+          this.$router.go(0)
+        })
       }
     }
   }
@@ -57,6 +71,9 @@
     width: 100%;
     background-color: #a61515;
     position: fixed;
+    margin: 0;
+    top: 0;
+    left: 0;
   }
 
   .el-header {

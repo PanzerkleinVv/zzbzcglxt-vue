@@ -1028,16 +1028,10 @@
         })
       },
       getUser() {
-        this.$axios.get("/user/me").then(resp => {
-          if (resp && resp.status === 200) {
-            for (let adminForm0 of this.adminForm) {
-              adminForm0.userName = resp.data.userName
-            }
-            this.userName = resp.data.userName
-          } else {
-
-          }
-        })
+        for (let adminForm0 of this.adminForm) {
+          adminForm0.userName = this.$store.getters.getUser.userName
+        }
+        this.userName = this.$store.getters.getUser.userName
       },
       changeSelectRows(val) {
         this.multipleSelection = val

@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-form :inline="true" :model="searchFrom" ref="searchFrom" size="small">
-      <el-form-item label="查找类型">
+      <el-form-item label="查找耗材">
         <el-input v-model="searchFrom.consumableName" placeholder="查找耗材" clearable @change="onSearch"></el-input>
       </el-form-item>
       <el-form-item>
@@ -30,7 +30,7 @@
             type="info"
             size="mini"
             @click="handleSplit(scope.$index, scope.row)"
-            v-if="scope.row.subConsumable.length > 0">拆散
+            v-if="scope.row.subConsumable.length > 0 && scope.row.consumableCount > 0">拆散
           </el-button>
           <el-button
             type="warning"
@@ -68,7 +68,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="耗材单位" prop="consumableUnit" ref="consumableUnit">
-              <el-input v-model="infoData.consumableUnit" autocomplete="on" placeholder="请输入设备IP" clearable></el-input>
+              <el-input v-model="infoData.consumableUnit" autocomplete="on" placeholder="请输入耗材单位" clearable></el-input>
             </el-form-item>
           </el-col>
         </el-row>
@@ -97,39 +97,46 @@
     </el-dialog>
     <el-dialog :visible.sync="ledgerDialog" destroy-on-close append-to-body>
       <div slot="title" style="color: #ffffff; font-size: larger">台账登记</div>
-      <el-form :model="ledgeData" ref="ledgeData" :rules="ledgeRules" label-position="right" label-width="80px"
-               size="small" v-loading="ledgeLoading">
+      <el-form :model="ledgerData" ref="ledgerData" :rules="ledgerRules" label-position="right" label-width="80px"
+               size="small" v-loading="infoLoading">
         <el-row type="flex" justify="space-between">
           <el-col :span="12">
             <el-form-item label="耗材">
-              <el-input v-model="ledgeData.consumableName" readonly></el-input>
+              <el-input v-model="ledgerData.consumableName" readonly></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="耗材单位" prop="consumableUnit" ref="consumableUnit">
-              <el-input v-model="ledgerTypeNames[ledgeData.ledgerType]" readonly></el-input>
+            <el-form-item label="操作">
+              <el-input v-model="ledgerTypeNames[ledgerData.ledgerType]" readonly></el-input>
             </el-form-item>
           </el-col>
         </el-row>
         <el-row type="flex" justify="space-between">
           <el-col :span="12">
-            <el-form-item label="整包耗材" prop="packageId" ref="packageId">
-              <el-select v-model="infoData.packageId" placeholder="请选择" :loading="consumableListLoading"
-                         loading-text="载入中……" filterable>
-                <el-option
-                  v-for="(item,i) in consumableList"
-                  :key="i"
-                  :label="item.consumableName"
-                  :value="item.consumableId">
-                </el-option>
-              </el-select>
+            <el-form-item label="变更数量" prop="ledgerCount" ref="ledgerCount">
+              <el-input-number v-model="ledgerData.ledgerCount" :min="ledgerData.ledgerCountMin" :precision="0"
+                               :max="ledgerData.ledgerCountMax"></el-input-number>
+              <span>{{ledgerData.consumableUnit}}</span>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="包装规格" prop="subCount" ref="subCount" v-if="ledgerData.ledgerType === 3">
+              <el-input-number v-model="ledgerData.subCount" :min="1" :precision="0"></el-input-number>
+              <span>{{ledgerData.ledgerSubUnit + "/每" + ledgerData.consumableUnit}}</span>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row type="flex" justify="space-between">
+          <el-col :span="12">
+            <el-form-item label="经手人">
+              <el-input v-model="ledgerData.userName" readonly></el-input>
             </el-form-item>
           </el-col>
         </el-row>
       </el-form>
       <div slot="footer" align="center">
-        <el-button @click="infoDialog = false">取 消</el-button>
-        <el-button type="primary" @click="onSubmit" :loading="formLoading">
+        <el-button @click="ledgerDialog = false">取 消</el-button>
+        <el-button type="primary" @click="ledgerSubmit" :loading="formLoading">
           {{ formLoading?'提交中 ...':'确定'}}
         </el-button>
       </div>
@@ -142,6 +149,13 @@
   export default {
     name: "Consumable",
     data() {
+      let validateCount = (rule, value, callback) => {
+        if (value === 0) {
+          callback(new Error('不能为0'));
+        } else {
+          callback();
+        }
+      }
       return {
         searchFrom: {
           consumableName: '',
@@ -177,7 +191,29 @@
         infoLoading: false,
         formLoading: false,
         consumableListLoading: true,
-        consumableList: []
+        consumableList: [],
+        ledgerData: {
+          consumableName: "",
+          ledgerType: 0,
+          ledgerConsumable: "",
+          ledgerCount: 1,
+          ledgerCountMin: 0,
+          ledgerCountMax: 1,
+          consumableUnit: "",
+          subCount: 1,
+          ledgerSubUnit: ""
+        },
+        ledgerDialog: false,
+        ledgerRules: {
+          ledgerCount: [
+            {required: true, message: '请输入变动数量', trigger: 'change'},
+            {validator: validateCount, trigger: 'change'}
+          ],
+          subCount: [
+            {required: true, message: '请输入包装规格', trigger: 'change'}
+          ]
+        },
+        ledgerTypeNames: ['盘点', '进货', '领取', '拆分']
       }
     },
     methods: {
@@ -227,10 +263,40 @@
         this.onSearch()
       },
       handleCheck(index, row) {
-
+        this.openLedger(row, 0)
       },
       handleBuy(index, row) {
-
+        this.openLedger(row, 1)
+      },
+      handleSplit(index, row) {
+        this.openLedger(row, 3)
+      },
+      openLedger(row, type) {
+        this.infoLoading = true
+        this.ledgerDialog = true
+        this.$nextTick(() => {
+            this.ledgerData = {
+              ledgerType: type,
+              ledgerConsumable: row.consumableId,
+              consumableName: row.consumableName,
+              consumableUnit: row.consumableUnit,
+              ledgerCount: 1,
+              userName: this.userName
+            }
+            if (this.ledgerData.ledgerType === 0) {
+              this.ledgerData.ledgerCountMin = -(row.consumableCount)
+            } else if (this.ledgerData.ledgerType === 1) {
+              this.ledgerData.ledgerCountMin = 1
+              this.ledgerData.ledgerCountMax = Infinity
+            } else if (this.ledgerData.ledgerType === 3) {
+              this.ledgerData.ledgerCountMin = 1
+              this.ledgerData.ledgerCountMax = row.consumableCount
+              this.ledgerData.ledgerSubUnit = row.subConsumable[0].consumableUnit
+              this.ledgerData.subCount = 1
+            }
+            this.infoLoading = false
+          }
+        )
       },
       onSubmit() {
         this.formLoading = true
@@ -269,6 +335,43 @@
           }
         })
       },
+      ledgerSubmit() {
+        this.formLoading = true
+        this.$refs.ledgerData.validate((valid) => {
+          if (valid) {
+            let formData = this.$querystring.stringify(this.ledgerData)
+            this.$axios.post(
+              "/consumable/ledger/edit",
+              formData,
+              {
+                headers: {"content-type": "application/x-www-form-urlencoded;charset=utf-8"}
+              }).then(resp => {
+                if (resp && resp.status === 200) {
+                  if (resp.data.result) {
+                    this.$message({
+                      message: resp.data.content,
+                      type: 'success'
+                    })
+                    this.init()
+                    this.ledgerDialog = false
+                    this.formLoading = false
+                  } else {
+                    this.$message({
+                      message: resp.data.content,
+                      type: 'error'
+                    })
+                  }
+                } else {
+
+                }
+                this.formLoading = false
+              }
+            )
+          } else {
+            this.formLoading = false
+          }
+        })
+      },
       getConsumableList() {
         this.$axios.get("/consumable/list").then(resp => {
           if (resp && resp.status === 200) {
@@ -282,9 +385,13 @@
           }
         })
       },
+      getUser() {
+        this.userName = this.$store.getters.getUser.userName
+      },
       init() {
         this.$emit("title", "耗材库存管理")
         this.getConsumableList()
+        this.getUser()
         this.onSearch()
       }
     },
