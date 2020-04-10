@@ -1,15 +1,8 @@
 <template>
   <div>
-    <el-form :inline="true" :model="searchFrom" ref="searchFrom" size="small">
-      <el-form-item label="入库原由">
-        <el-input v-model="searchFrom.registrationReasonName" placeholder="查找设备入库原由" clearable
-                  @change="onSearch"></el-input>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="onSearch">查询</el-button>
-        <el-button type="success" @click="onCreate">新增</el-button>
-      </el-form-item>
-    </el-form>
+    <el-card align="left">
+      <el-button type="success" @click="onCreate" size="small">新增用户</el-button>
+    </el-card>
     <el-table
       :data="tableData"
       style="width: 100%"
@@ -29,7 +22,8 @@
         <template slot-scope="scope">
           <el-button
             size="mini"
-            @click="handleEdit(scope.$index, scope.row)">编辑
+            :loading="resetLoading[scope.$index]"
+            @click="handleEdit(scope.$index, scope.row)">重置密码
           </el-button>
         </template>
       </el-table-column>
@@ -47,22 +41,18 @@
       :total="searchFrom.totalSize">
     </el-pagination>
     <el-dialog :visible.sync="infoDialog" destroy-on-close append-to-body>
-      <div slot="title" style="color: #ffffff; font-size: larger">设备入库原由信息</div>
+      <div slot="title" style="color: #ffffff; font-size: larger">新增用户</div>
       <el-form :model="infoData" ref="infoData" :rules="infoRules" label-position="right" label-width="80px"
                size="small" v-loading="infoLoading">
         <el-row type="flex" justify="space-between">
-          <el-col :span="24">
-            <el-form-item label="入库原由" prop="registrationReasonName">
-              <el-input v-model="infoData.registrationReasonName" autocomplete="off" placeholder="请输入设备入库原由"></el-input>
+          <el-col :span="12">
+            <el-form-item label="用户名" prop="userName">
+              <el-input v-model="infoData.userName" autocomplete="off" placeholder="请输入用户名"></el-input>
             </el-form-item>
           </el-col>
-        </el-row>
-        <el-row type="flex" justify="space-between">
-          <el-col :span="24">
-            <el-form-item label="需要备注">
-              &emsp;
-              <el-switch v-model="infoData.registrationReasonNote" active-text="是" inactive-text="否">
-              </el-switch>
+          <el-col :span="12">
+            <el-form-item label="备注">
+              <el-input v-model="infoData.userDesc" autocomplete="off" placeholder="请输入用户备注"></el-input>
             </el-form-item>
           </el-col>
         </el-row>
@@ -79,42 +69,64 @@
 
 <script>
   export default {
-    name: "RegistrationReason",
+    name: "User",
     data() {
+      const checkUserName = (rule, value, callback) => {
+        this.$axios.get("/user/checkUserName",
+          {
+            params:
+              {
+                'userName': value
+              }
+          }).then(resp => {
+          if (resp.data === true) {
+            callback()
+          } else {
+            return callback(new Error('用户名已存在'))
+          }
+        })
+      }
       return {
         searchFrom: {
-          registrationReasonName: '',
           pageSize: 10,
           totalSize: 0,
           pageNum: 1
         },
         tableHeader: [{
-          prop: "registrationReasonName",
-          label: "设备入库原由",
+          prop: "userName",
+          label: "用户名",
           showOverflowTooltip: true,
           sortable: true,
           fixed: true
+        }, {
+          prop: "userDesc",
+          label: "备注",
+          showOverflowTooltip: true,
+          sortable: true,
         }],
         infoData: {},
         infoRules: {
-          typeName: [
-            {required: true, message: '请输入设备入库原由', trigger: 'blur'}
+          userName: [
+            {required: true, message: '请输入用户名', trigger: 'blur'},
+            {validator: checkUserName, trigger: 'blur'}
           ]
         },
         tableData: [],
+        resetLoading: [],
         loading: true,
         infoDialog: false,
-        infoLoading: true,
-        formLoading: false
+        formLoading: false,
+        infoLoading: true
       }
     },
     methods: {
       onSearch() {
         this.loading = true
         this.$axios.get(
-          "/equipment/registrationReason/search", {
+          "/user/list", {
             params: {
-              'registrationReasonName': this.searchFrom.registrationReasonName,
+              'userName': this.searchFrom.userName,
+              'userDesc': this.searchFrom.userDesc,
               'pageNum': this.searchFrom.pageNum,
               'pageSize': this.searchFrom.pageSize
             }
@@ -135,9 +147,8 @@
         this.infoDialog = true
         this.$nextTick(() => {
           this.infoData = {
-            registrationReasonId: "",
-            registrationReasonName: "",
-            registrationReasonNote: false
+            userName: "",
+            userDesc: ""
           }
           this.infoLoading = false
         })
@@ -151,19 +162,26 @@
         this.onSearch()
       },
       handleEdit(index, row) {
-        this.infoLoading = true
-        this.infoDialog = true
-        this.$nextTick(() => {
-          this.$axios.get("/equipment/registrationReason/info", {
-            params: {
-              registrationReasonId: row.registrationReasonId
-            }
-          }).then(resp => {
-            if (resp && resp.status === 200) {
-              this.infoData = resp.data
-              this.infoLoading = false
-            }
-          })
+        this.resetLoading[index] = true
+        this.$axios.get("/user/reset", {
+          params: {
+            userId: row.userId
+          }
+        }).then(resp => {
+          if (resp.data.result) {
+            this.$message({
+              message: resp.data.content,
+              type: 'success'
+            })
+            this.init()
+            this.resetLoading[index] = false
+          } else {
+            this.$message({
+              message: resp.data.content,
+              type: 'error'
+            })
+            this.resetLoading[index] = false
+          }
         })
       },
       onSubmit() {
@@ -172,7 +190,7 @@
           if (valid) {
             let formData = this.$querystring.stringify(this.infoData)
             this.$axios.post(
-              "/equipment/registrationReason/edit",
+              "/user/create",
               formData,
               {
                 headers: {"content-type": "application/x-www-form-urlencoded;charset=utf-8"}
@@ -203,7 +221,7 @@
         })
       },
       init() {
-        this.$emit("tab", this.$route.path)
+        this.$emit("title", "用户设置")
         this.onSearch()
       }
     },

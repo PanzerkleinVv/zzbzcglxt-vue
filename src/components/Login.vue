@@ -43,6 +43,16 @@
             _this.$store.commit('login', _this.loginForm)
             let path = this.$route.query.redirect
             this.$router.replace({path: path === '/' || path === undefined ? '/statistics' : path})
+          } else if (successResponse.data.code === 498) {
+            this.$message({
+              message: "密码错误",
+              type: 'error'
+            })
+          } else if (successResponse.data.code === 499) {
+            this.$message({
+              message: "用户名不存在",
+              type: 'error'
+            })
           }
         }).catch(failResponse => {
 
@@ -54,7 +64,7 @@
             title: '错误',
             message: this.$route.query.message,
             duration: 0
-          });
+          })
         }
       }
     },

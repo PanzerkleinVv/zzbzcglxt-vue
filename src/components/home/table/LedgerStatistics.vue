@@ -44,7 +44,7 @@
           sortable: true
         }, {
           prop: "buy",
-          label: "买入",
+          label: "进货",
           sortable: true
         }, {
           prop: "receive",

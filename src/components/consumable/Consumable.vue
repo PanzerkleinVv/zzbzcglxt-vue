@@ -91,7 +91,7 @@
       <div slot="footer" align="center">
         <el-button @click="infoDialog = false">取 消</el-button>
         <el-button type="primary" @click="onSubmit" :loading="formLoading">
-          {{ formLoading?'提交中 ...':'确定'}}
+          {{ formLoading ? '提交中 ...' : '确定'}}
         </el-button>
       </div>
     </el-dialog>

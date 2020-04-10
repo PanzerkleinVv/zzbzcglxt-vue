@@ -62,7 +62,7 @@
           .get('/statistics/logPeriod')
           .then(successResponse => {
             for (let data0 of successResponse.data) {
-              let obj = new Object()
+              let obj = {}
               obj.label = data0.period
               obj.router = "/statistics/log/" + data0.logYear + "/" + data0.logMonth
               this.equipmentTabs.push(obj)
@@ -76,7 +76,7 @@
           .get('/statistics/ledgerPeriod')
           .then(successResponse => {
             for (let data0 of successResponse.data) {
-              let obj = new Object()
+              let obj = {}
               obj.label = data0.period
               obj.router = "/statistics/ledger/" + data0.logYear + "/" + data0.logMonth
               this.consumableTabs.push(obj)

@@ -167,14 +167,14 @@
                     this.$message({
                       message: resp.data.content,
                       type: 'success'
-                    });
+                    })
                     this.init()
                     this.infoDialog = false
                   } else {
                     this.$message({
                       message: resp.data.content,
                       type: 'error'
-                    });
+                    })
                   }
                 } else {
 
