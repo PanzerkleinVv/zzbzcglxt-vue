@@ -18,6 +18,8 @@ import Consumable from "../components/consumable/Consumable";
 import Ledger from "../components/consumable/Ledger";
 import User from "../components/user/User";
 import Psw from "../components/user/Psw";
+import NetworkParameter from "../components/network/NetworkParameter";
+import NetworkParameterConfig from "../components/network/parameter/NetworkParameterConfig";
 
 Vue.use(Router)
 const routerPush = Router.prototype.push
@@ -89,7 +91,7 @@ export default new Router({
           path: '/equipmentConfig',
           name: 'EquipmentConfig',
           component: EquipmentConfig,
-          redirect: '/type',
+          redirect: '/equipmentConfig/type',
           children: [
             {
               path: '/equipmentConfig/type',
@@ -156,6 +158,21 @@ export default new Router({
           meta: {
             requireAuth: true
           }
+        }, {
+          path: '/networkParameter',
+          name: 'NetworkParameter',
+          component: NetworkParameter,
+          redirect: '/networkParameter/0',
+          children: [
+            {
+              path: '/networkParameter/:group',
+              name: 'NetworkParameterConfig',
+              component: NetworkParameterConfig,
+              meta: {
+                requireAuth: true
+              }
+            }
+          ]
         }
       ]
     }, {

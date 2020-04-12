@@ -66,7 +66,14 @@
             name: '#network', navItem: '网络管理', subNavList: [
               {name: '/terminal', navItem: '终端管理', disabled: true},
               {name: '/application', navItem: '应用管理', disabled: true},
-              {name: '/networkParameter', navItem: '参数设置', disabled: true}
+              {
+                name: '/networkParameter', navItem: '参数设置', subNavList: [
+                  {name: '/networkParameter/0', navItem: '终端类型'},
+                  {name: '/networkParameter/1', navItem: '操作系统'},
+                  {name: '/networkParameter/2', navItem: '网段'},
+                  {name: '/networkParameter/3', navItem: '房号'},
+                  {name: '/networkParameter/4', navItem: '密级'}]
+              }
             ], icon: "el-icon-cpu"
           }, {
             name: '#user', navItem: '用户管理', subNavList: [

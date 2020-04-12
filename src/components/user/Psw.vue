@@ -1,30 +1,37 @@
 <template>
-  <el-dialog :visible.sync="infoDialog" destroy-on-close append-to-body @closed="handleClosed">
-    <div slot="title" style="color: #ffffff; font-size: larger">修改密码</div>
-    <el-form :model="infoData" ref="infoData" :rules="infoRules" label-position="right" label-width="80px"
-             size="small">
-      <el-row type="flex" justify="space-between">
-        <el-col :span="24">
-          <el-form-item label="新密码" prop="userPsw">
-            <el-input type="password" v-model="infoData.userPsw" autocomplete="off" placeholder="请输入密码"></el-input>
-          </el-form-item>
-        </el-col>
-      </el-row>
-      <el-row type="flex" justify="space-between">
-        <el-col :span="24">
-          <el-form-item label="确认密码" prop="userPsw0">
-            <el-input type="password" v-model="infoData.userPsw0" autocomplete="off" placeholder="请再次输入密码"></el-input>
-          </el-form-item>
-        </el-col>
-      </el-row>
-    </el-form>
-    <div slot="footer" align="center">
-      <el-button @click="infoDialog = false">取 消</el-button>
-      <el-button type="primary" @click="onSubmit" :loading="formLoading">
-        {{ formLoading?'提交中 ...':'确定'}}
-      </el-button>
-    </div>
-  </el-dialog>
+  <el-row type="flex">
+    <el-col :span="7"></el-col>
+    <el-col :span="10">
+      <el-card>
+        <el-form :model="infoData" ref="infoData" :rules="infoRules" label-position="right" label-width="80px"
+                 size="small">
+          <el-row type="flex" justify="space-between">
+            <el-col :span="24">
+              <el-form-item label="新密码" prop="psw">
+                <el-input type="password" v-model="infoData.psw" autocomplete="off" placeholder="请输入密码"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row type="flex" justify="space-between">
+            <el-col :span="24">
+              <el-form-item label="确认密码" prop="psw0">
+                <el-input type="password" v-model="infoData.psw0" autocomplete="off"
+                          placeholder="请再次输入密码"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row type="flex" justify="space-between">
+            <el-col :span="24" align="center">
+              <el-button type="primary" @click="onSubmit" :loading="formLoading">
+                {{ formLoading?'提交中 ...':'确定'}}
+              </el-button>
+            </el-col>
+          </el-row>
+        </el-form>
+      </el-card>
+    </el-col>
+    <el-col :span="7"></el-col>
+  </el-row>
 </template>
 
 <script>
@@ -40,8 +47,8 @@
       };
       return {
         infoData: {
-          userPsw: "",
-          userPsw0: ""
+          psw: "",
+          psw0: ""
         },
         infoRules: {
           userPsw: [
@@ -52,14 +59,10 @@
             {validator: validatePsw0, trigger: 'blur'}
           ],
         },
-        infoDialog: true,
         formLoading: false
       }
     },
     methods: {
-      handleClosed() {
-        this.$router.back()
-      },
       logout() {
         this.$axios.get(
           '/logout'
@@ -75,9 +78,12 @@
         this.formLoading = true
         this.$refs.infoData.validate((valid) => {
           if (valid) {
+            this.infoData.userPsw = this.$sha256(this.infoData.psw)
+            let formData = this.$querystring.stringify(this.infoData)
             this.$axios.post(
-              "/user/changePsw", {
-                userPsw: this.$sha256(this.infoData.userPsw)
+              "/user/changePsw",
+              formData, {
+                headers: {"content-type": "application/x-www-form-urlencoded;charset=utf-8"}
               }).then(resp => {
                 if (resp && resp.status === 200) {
                   if (resp.data.result) {
