@@ -46,7 +46,19 @@
         </el-col>
       </el-row>
       <el-row>
-        <el-col align="center">
+        <el-col :span="8">
+          <el-form-item label="入库">
+            <el-date-picker
+              v-model="searchFrom.equipmentRegistrationDate"
+              type="date"
+              clearable @change="onSearch"
+              placeholder="查找入库日期"
+              format="yyyy 年 MM 月 dd 日"
+              value-format="yyyy-MM-dd">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span="16">
           <el-form-item>
             <el-button type="primary" @click="onSearch">查询</el-button>
             <el-button type="success" @click="onCreate">新增</el-button>
@@ -236,6 +248,10 @@
             </el-col>
             <el-col :span="2"><b>密级:</b></el-col>
             <el-col :span="10">{{adminData.secrecyName == null ? "" : adminData.secrecyName}}</el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="2"><b>备注:</b></el-col>
+            <el-col :span="22">{{adminData.equipmentNote}}</el-col>
           </el-row>
         </div>
       </el-card>
@@ -458,6 +474,7 @@
           equipmentMac: '',
           equipmentSn: '',
           logTarget: '',
+          equipmentRegistrationDate: '',
           pageSize: 10,
           totalSize: 0,
           pageNum: 1
@@ -649,6 +666,7 @@
               'equipmentMac': this.searchFrom.equipmentMac,
               'equipmentSn': this.searchFrom.equipmentSn,
               'logTarget': this.searchFrom.logTarget,
+              'equipmentRegistrationDate': this.searchFrom.equipmentRegistrationDate,
               'pageNum': this.searchFrom.pageNum,
               'pageSize': this.searchFrom.pageSize
             }

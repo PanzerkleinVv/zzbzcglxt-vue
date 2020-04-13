@@ -11,7 +11,7 @@
         <el-tabs v-model="activeIndex" type="border-card" @tab-click="tabClick">
           <el-tab-pane v-for="(item, i) in equipmentTabs" :key="i" :name="item.router" :label="item.label">
           </el-tab-pane>
-          <router-view/>
+          <router-view v-if="activeName === '1'"/>
         </el-tabs>
       </el-collapse-item>
       <el-collapse-item name="2">
@@ -24,7 +24,7 @@
         <el-tabs v-model="activeIndex" type="border-card" @tab-click="tabClick">
           <el-tab-pane v-for="(item, i) in consumableTabs" :key="i" :name="item.router" :label="item.label">
           </el-tab-pane>
-          <router-view/>
+          <router-view v-if="activeName === '2'"/>
         </el-tabs>
       </el-collapse-item>
     </el-collapse>

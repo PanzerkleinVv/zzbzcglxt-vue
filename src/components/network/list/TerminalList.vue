@@ -1,8 +1,15 @@
 <template>
   <div>
-    <el-card align="left">
-      <el-button type="success" @click="onCreate" size="small">新增参数</el-button>
-    </el-card>
+    <el-form :inline="true" :model="searchFrom" ref="searchFrom" size="small">
+      <el-form-item label="查找IP">
+        <el-input v-model="searchFrom.terminalIp" placeholder="查找IP" clearable @change="onSearch"></el-input>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="onSearch">查询</el-button>
+        <el-button type="success" @click="onCreate">手动新增</el-button>
+        <el-button type="warning" @click="onScan">扫描网段</el-button>
+      </el-form-item>
+    </el-form>
     <el-table
       :data="tableData"
       style="width: 100%"

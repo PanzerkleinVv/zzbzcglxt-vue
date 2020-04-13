@@ -64,7 +64,11 @@
             ], icon: "el-icon-mouse"
           }, {
             name: '#network', navItem: '网络管理', subNavList: [
-              {name: '/terminal', navItem: '终端管理', disabled: true},
+              {
+                name: '/terminal', navItem: '终端管理', subNavList: [
+                  {name: '/terminal/server', navItem: '机房网段'},
+                  {name: '/terminal/pc', navItem: '用户网段'}]
+              },
               {name: '/application', navItem: '应用管理', disabled: true},
               {
                 name: '/networkParameter', navItem: '参数设置', subNavList: [

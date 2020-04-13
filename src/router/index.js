@@ -20,6 +20,8 @@ import User from "../components/user/User";
 import Psw from "../components/user/Psw";
 import NetworkParameter from "../components/network/NetworkParameter";
 import NetworkParameterConfig from "../components/network/parameter/NetworkParameterConfig";
+import Terminal from "../components/network/Terminal";
+import TerminalList from "../components/network/list/TerminalList";
 
 Vue.use(Router)
 const routerPush = Router.prototype.push
@@ -34,7 +36,6 @@ export default new Router({
       path: '/home',
       name: 'Home',
       component: Home,
-      // home页面并不需要被访问
       redirect: '/statistics',
       children: [
         {
@@ -168,6 +169,21 @@ export default new Router({
               path: '/networkParameter/:group',
               name: 'NetworkParameterConfig',
               component: NetworkParameterConfig,
+              meta: {
+                requireAuth: true
+              }
+            }
+          ]
+        }, {
+          path: '/terminal/:use',
+          name: 'Terminal',
+          component: Terminal,
+          redirect: '/terminal/:use/list',
+          children: [
+            {
+              path: '/terminal/:use/list',
+              name: 'TerminalList',
+              component: TerminalList,
               meta: {
                 requireAuth: true
               }
