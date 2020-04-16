@@ -66,6 +66,7 @@
             name: '#network', navItem: '网络管理', subNavList: [
               {
                 name: '/terminal', navItem: '终端管理', subNavList: [
+                  {name: '/terminal/switch', navItem: '管理网段'},
                   {name: '/terminal/server', navItem: '机房网段'},
                   {name: '/terminal/pc', navItem: '用户网段'}]
               },
@@ -98,6 +99,10 @@
           this.activeIndex = "/statistics"
         } else if (index.indexOf("/equipment/") === 0) {
           this.activeIndex = "/equipment"
+        } else if (index.indexOf("/server") > -1) {
+          this.activeIndex = "/terminal/server"
+        } else if (index.indexOf("/pc") > -1) {
+          this.activeIndex = "/terminal/pc"
         } else {
           this.activeIndex = index
         }
@@ -127,7 +132,7 @@
   }
 
   .el-menu {
-    margin-top: 40px;
+    margin-top: 20px;
   }
 
   .el-submenu .el-menu-item {

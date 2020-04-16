@@ -128,7 +128,7 @@
         infoDialog: false,
         formLoading: false,
         infoLoading: true,
-        useList: ['全部可用', '仅服务器', '仅PC', '停用'],
+        useList: ['全部可用', '仅服务器段', '仅PC段', '仅交换机段', '停用'],
         groupList: ['终端类型', '操作系统', '网段', '房号', '密级']
       }
     },

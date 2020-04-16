@@ -6,6 +6,7 @@
       :data="tableData"
       style="width: 100%"
       size="small"
+      max-height="400"
       border
       stripe>
       <el-table-column

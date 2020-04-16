@@ -178,7 +178,6 @@ export default new Router({
           path: '/terminal/:use',
           name: 'Terminal',
           component: Terminal,
-          redirect: '/terminal/:use/list',
           children: [
             {
               path: '/terminal/:use/list',

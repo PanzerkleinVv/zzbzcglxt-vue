@@ -4,6 +4,7 @@
       <el-tab-pane v-for="(item, i) in terminalTabs" :key="i" :name="item.router" :label="item.label">
       </el-tab-pane>
       <router-view/>
+      <div v-if="terminalTabs.length === 0" style="color: #909399; font-size: small" align="center">暂无数据，请先设置网段参数</div>
     </el-tabs>
   </div>
 </template>
@@ -29,6 +30,10 @@
           this.$emit("title", "机房网段终端")
           this.currentUse = 1
           this.getTabs()
+        } else if (this.$route.params.use === 'switch' && this.currentUse !== 3) {
+          this.$emit("title", "管理网段")
+          this.currentUse = 3
+          this.getTabs()
         } else if (this.$route.params.use == null) {
           this.$route.params.use = 'server'
         }
@@ -46,21 +51,19 @@
             for (let i = 0; i < successResponse.data.length; i++) {
               let data0 = successResponse.data[i]
               data0.label = data0.networkParameterName
-              data0.router = data0.networkParameterValue
+              data0.router = data0.networkParameterId
               if (i === 0) {
-                this.$route.query.segment = this.activeIndex
                 this.activeIndex = data0.router
                 let path = '/terminal/' + this.$route.params.use + '/list'
-                this.$router.push(path);
+                this.$router.push({ path:path, query: {segment: this.$route.query.segment}});
               }
-              this.terminalTabs.push(data0)
             }
+            this.terminalTabs = successResponse.data
           })
           .catch(failResponse => {
           })
       },
       tabClick() {
-        this.$route.query.segment = this.activeIndex
         let path = '/terminal/' + this.$route.params.use + '/list'
         this.$router.push(path);
       }
@@ -71,6 +74,9 @@
     watch: {
       '$route'(to, from) {
         this.init()
+      },
+      activeIndex(newValue, oldValue) {
+        this.$route.query.segment = newValue;
       }
     }
   }
